@@ -49,16 +49,9 @@ jobs:
         working-directory: part-2-test-automation
 
       - name: Upload Playwright report
-        id: playwright_report
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v6
         with:
           name: demoqa-playwright-report-${{ github.run_number }}
           path: part-2-test-automation/playwright-report/
           retention-days: 14
-
-      - name: Add report link to job summary
-        if: ${{ !cancelled() && steps.playwright_report.outputs.artifact-url != '' }}
-        run: |
-          echo "## Playwright HTML report" >> "$GITHUB_STEP_SUMMARY"
-          echo "[Download the report](${{ steps.playwright_report.outputs.artifact-url }})" >> "$GITHUB_STEP_SUMMARY"

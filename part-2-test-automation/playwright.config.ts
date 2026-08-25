@@ -15,6 +15,7 @@ export default defineConfig({
   workers: isCI ? 1 : undefined,
   reporter: [
     ['list'],
+    ['./src/reporters/github-summary-reporter.ts'],
     [
       'html',
       {
