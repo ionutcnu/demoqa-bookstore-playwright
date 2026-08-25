@@ -1,0 +1,29 @@
+{
+  "name": "demoqa-bookstore-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Playwright UI and API tests for the DemoQA Book Store Application",
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --project=ui",
+    "test:api": "playwright test --project=api",
+    "test:headed": "playwright test --project=ui --headed",
+    "test:debug": "playwright test --project=ui --debug",
+    "typecheck": "tsc --noEmit",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "quality": "biome check .",
+    "quality:fix": "biome check --write .",
+    "quality:ci": "biome ci .",
+    "report": "playwright show-report"
+  },
+  "engines": {
+    "node": ">=22 <27"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.10",
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^24.13.3",
+    "typescript": "^7.0.2"
+  }
+}
