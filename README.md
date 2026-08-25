@@ -68,6 +68,14 @@ npm run report
 The full suite accesses the public DemoQA environment and creates two isolated
 disposable accounts. Both accounts are deleted during teardown.
 
+## HTML report
+
+Playwright creates an HTML report after each complete test run. Open it locally
+with `npm run report`. GitHub Actions displays totals and a per-test results table
+directly in the job summary. A downloadable HTML report is retained for 14 days
+when more detail is needed. Failed tests include their traces, screenshots, and
+videos in that report.
+
 ## Test design notes
 
 - Selectors use roles, visible names, placeholders, and row-scoped content.
