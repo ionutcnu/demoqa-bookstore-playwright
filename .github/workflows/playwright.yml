@@ -1,4 +1,5 @@
-name: Playwright Tests
+name: DemoQA Book Store CI
+run-name: "DemoQA Book Store validation #${{ github.run_number }}"
 
 on:
   push:
@@ -11,7 +12,8 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  quality-and-tests:
+    name: Quality checks and Playwright tests
     timeout-minutes: 20
     runs-on: ubuntu-latest
 
@@ -42,14 +44,14 @@ jobs:
         run: npm run typecheck
         working-directory: part-2-test-automation
 
-      - name: Run tests
+      - name: Run UI and API tests
         run: npm test
         working-directory: part-2-test-automation
 
       - name: Upload Playwright report
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
-          name: playwright-report
+          name: demoqa-playwright-report-${{ github.run_number }}
           path: part-2-test-automation/playwright-report/
           retention-days: 14
