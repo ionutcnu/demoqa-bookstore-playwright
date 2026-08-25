@@ -1,6 +1,6 @@
 # Test Cases: DemoQA Book Store Application
 
-The cases are ordered by priority. Since DemoQA is a practice application, priority is based on functional importance, test dependencies, state complexity, and defect-detection value.
+Priority is based on functional importance, test dependencies, state complexity, and defect-detection value. Cases are listed roughly in priority order; later additions are appended at the end.
 
 ## TC-01: Display book catalog records
 
@@ -17,7 +17,7 @@ The cases are ordered by priority. Since DemoQA is a practice application, prior
 ## TC-02: Search by case-insensitive partial title or author
 
 - Priority: High
-- Type: Positive and equivalence partitioning
+- Type: Positive
 - Preconditions: The catalog contains known books.
 
 **Given** the user is on the Book Store page \
@@ -59,7 +59,7 @@ The cases are ordered by priority. Since DemoQA is a practice application, prior
 ## TC-05: Reject missing fields and invalid login credentials
 
 - Priority: High
-- Type: Negative, equivalence partitioning and decision table
+- Type: Negative
 - Preconditions: The user is logged out and is on the Login page.
 
 **Given** the username and password fields are empty \
@@ -81,7 +81,7 @@ The cases are ordered by priority. Since DemoQA is a practice application, prior
 ## TC-06: Add, persist, and remove a book from a collection
 
 - Priority: High
-- Type: Positive and state transition
+- Type: Positive
 - Preconditions: A disposable user is available or created for the test and does not already have the selected book.
 
 **Given** the disposable user logs in successfully \
@@ -102,7 +102,7 @@ If this test fails after adding the book, cleanup must still run. It must remove
 ## TC-07: Prevent a logged-out user from adding a book
 
 - Priority: Medium
-- Type: Negative and authorization
+- Type: Negative
 - Preconditions: The user is logged out and a known book exists in the catalog.
 
 **Given** a logged-out user opens a book's detail page \
@@ -114,7 +114,7 @@ If this test fails after adding the book, cleanup must still run. It must remove
 ## TC-08: Handle empty, whitespace, and unknown searches
 
 - Priority: Medium
-- Type: Negative and edge
+- Type: Negative
 - Preconditions: The user is on the Book Store page and the catalog is loaded.
 
 **Given** the complete catalog is displayed \
@@ -135,7 +135,7 @@ If this test fails after adding the book, cleanup must still run. It must remove
 ## TC-09: Return from details to a consistent catalog
 
 - Priority: Medium
-- Type: State transition and edge
+- Type: Edge
 - Preconditions: A search filter has reduced the catalog to one or more books.
 
 **Given** the user opens a book from filtered search results \
@@ -156,3 +156,30 @@ If this test fails after adding the book, cleanup must still run. It must remove
 **When** the user selects the Title column again \
 **Then** the books are ordered by title in descending order \
 **And** the displayed sort direction matches the actual order.
+
+## TC-11: Prevent adding the same book twice
+
+- Priority: High
+- Type: Negative
+- Preconditions: A disposable user is logged in and already owns the selected book.
+
+**Given** the user opens a book that is already in the collection \
+**When** the user adds the book again \
+**Then** the application reports that the book is already in the collection \
+**And** the collection still contains exactly one copy of the book.
+
+## TC-12: Cancel book deletion
+
+- Priority: Medium
+- Type: Positive
+- Preconditions: A disposable user is logged in and owns at least one book.
+
+**Given** the user starts deleting a book from Profile \
+**When** the user cancels the deletion in the confirmation dialog \
+**Then** the dialog closes \
+**And** the book remains in the collection \
+**And** the book remains after a full page reload.
+
+### Cleanup
+
+The disposable account is removed during teardown, which also removes the added book.
