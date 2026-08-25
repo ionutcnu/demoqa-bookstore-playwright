@@ -15,7 +15,14 @@ export default defineConfig({
   workers: isCI ? 1 : undefined,
   reporter: [
     ['list'],
-    ['html', { outputFolder: 'playwright-report', open: 'never' }],
+    [
+      'html',
+      {
+        outputFolder: 'playwright-report',
+        open: 'never',
+        title: 'DemoQA Book Store Test Report',
+      },
+    ],
   ],
   use: {
     baseURL: 'https://demoqa.com',
