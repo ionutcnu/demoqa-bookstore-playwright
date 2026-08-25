@@ -36,4 +36,14 @@ export class ProfilePage {
     await dialog.accept();
     return message;
   }
+
+  async cancelDelete(title: string): Promise<void> {
+    const row = this.bookRow(title);
+    await row.locator('[title="Delete"]').click();
+
+    const cancelButton = this.page.locator('#closeSmallModal-cancel');
+    await cancelButton.waitFor({ state: 'visible' });
+    await cancelButton.click();
+    await cancelButton.waitFor({ state: 'hidden' });
+  }
 }

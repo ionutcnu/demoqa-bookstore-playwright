@@ -1,145 +1,43 @@
-# Test Strategy for the Security Alert Assistant
+# Testing Strategy for a Non-Deterministic Security Alert Assistant
 
-## 1. Objective
+## Defining "pass"
 
-The assistant receives security-alert data and produces a summary and
-recommendations. Its wording may change between runs, but the security facts and
-the safety of its advice must remain dependable.
+I would not compare the assistant's response with one exact expected paragraph. Different wording, ordering, or levels of detail can all be acceptable. Instead, I would evaluate the response against a combination of hard requirements and quality criteria.
 
-The main risks are:
+The hard requirements would cover factual grounding and safety. Every alert-specific factual statement must be supported by the provided alert data, important details such as affected entities and severity must be represented correctly, and the response must not contradict the source. When information is missing, the assistant should acknowledge the uncertainty rather than make an assumption. A violation of one of these requirements would fail that individual response.
 
-- Inventing users, devices, indicators, times, causes, or actions
-- Omitting information that changes the meaning or severity of the alert
-- Giving unsafe, destructive, or overconfident recommendations
-- Treating untrusted text inside an alert as instructions
-- Producing answers that are technically correct but not useful to an analyst
+The quality criteria would cover completeness, relevance, clarity, prioritization, and whether the recommendations are actionable. These could be scored using a defined rubric, for example from 1 to 5.
 
-## 2. What pass means
+Because the output varies, I would run each important scenario several times. A release gate could require zero critical unsupported claims, complete accuracy for fields such as IP addresses, usernames, timestamps, and severity, at least 95% coverage of required facts, and an agreed minimum quality score. I would also examine the worst-performing runs, because a good average could hide an occasional but serious hallucination.
 
-A passing response does not need to match one reference paragraph. It must meet
-two kinds of checks.
+## Building a repeatable test set
 
-Hard rules must pass on every run:
+I would create a version-controlled evaluation set using anonymized production-like alerts together with synthetic cases designed to cover specific risks. It would include common alert types, different severities, incomplete or conflicting data, multiple affected entities, long and noisy alerts, benign events, confirmed threats, and alert fields containing misleading text or prompt-injection attempts.
 
-- Alert facts are not changed.
-- Claims are supported by the supplied alert data.
-- Important fields such as alert type, severity, affected asset, time, and
-  indicators are included when available.
-- Missing information is described as unknown rather than guessed.
-- Recommendations do not claim that an action was completed.
-- Potentially destructive actions include suitable caution or approval steps.
-- Text inside the alert cannot override the assistant's task or safety rules.
+Each test case would contain the alert data, the user's question, the facts that must appear, facts that must not be claimed, acceptable recommendation boundaries, and the expected handling of missing information. The objective would be to create a "golden set of facts and constraints," rather than one golden response.
 
-Quality rules are measured across repeated runs:
+For example, if an alert only reports several failed authentication attempts, the test definition could require the assistant to mention the attempts and the affected account, while explicitly prohibiting claims that the account was compromised or that malware was installed. Recommendations such as investigating the account or temporarily blocking the source IP might be acceptable, provided they are presented as actions rather than as events that have already occurred.
 
-- The summary covers the important facts without unnecessary detail.
-- Recommendations are relevant to the alert and ordered sensibly.
-- The response clearly separates known facts, interpretations, and suggested
-  next steps.
-- Variation in wording does not create contradictory conclusions.
+I would keep the model, system prompt, configuration, and evaluation-set versions recorded for every run. If a seed can be controlled, I would use it for basic regression checks, but I would also deliberately run with different seeds or settings to exercise the feature's natural variability. A smaller subset could run on every change, while the full suite with repeated executions could run nightly or before a release. The subset used while tuning prompts would stay separate from the full set used for release decisions, so prompts are not tuned only to known examples.
 
-Release thresholds should be agreed with security analysts and product owners.
-For example, unsupported critical facts may have zero tolerance, while wording
-and style can use a scored rubric. A test case passes only when all hard rules
-pass and its repeated-run quality score meets the agreed threshold.
+## Detecting invented information
 
-## 3. Repeatable test set
+I would divide each response into individual factual claims and determine whether every claim is supported, contradicted, or not mentioned by the alert data.
 
-I would build a versioned benchmark from sanitized real alerts and synthetic
-cases. Each case would contain:
+Exact values such as IP addresses, usernames, device names, timestamps, event counts, and severity can be checked deterministically. Semantic statements require evidence mapping. For example, "five failed logins were recorded" may be supported, while "the attacker accessed the account" would be unsupported unless the alert contains evidence of a successful login or compromise.
 
-- A stable case ID and alert input
-- Facts that must appear
-- Facts that may appear if clearly marked as interpretation
-- Claims that must never appear
-- Acceptable recommendation categories
-- Known missing information
-- Risk level and reason for including the case
+I would also add perturbation checks: removing a field from the alert should remove claims based on that field, and changing one value should change only the related conclusions.
 
-The set would cover:
+Recommendations need separate treatment because they will not usually appear directly in the alert. A recommendation is not automatically a hallucination. However, it must be relevant to the available evidence and must not imply that an unobserved event occurred. Assumptions should be stated conditionally.
 
-- Common alert types and normal severity levels
-- Single-event and correlated multi-event alerts
-- Missing, empty, malformed, and conflicting fields
-- Similar alerts that differ in one important fact
-- Unknown assets or indicators
-- Duplicate and noisy events
-- Prompt-injection text placed inside alert fields
-- High-risk alerts where a poor recommendation could cause damage
+I would automate part of this verification using exact-field comparisons and a claim-to-evidence evaluator. A second model could help identify unsupported semantic claims, but I would not use another model as the only source of truth. Its results would be calibrated against decisions made by QA and security specialists. I would also include negative tests in which important information is deliberately omitted and verify that the assistant says the information is unavailable or requests clarification.
 
-The model, prompt, retrieval sources, configuration, and benchmark version must
-be recorded with every run. Where deterministic seeding is available it should
-be fixed, but each case should also run several times because a single seeded
-result does not measure real output variation.
+## Automation and manual verification
 
-A smaller calibration set can be used while changing prompts. A separate
-holdout set should be used for release decisions so that prompts are not tuned
-only to known examples.
+I would automate stable and measurable checks: input and output contracts, error handling, response time, required fields, exact alert facts, contradictions, forbidden claims, prompt-injection resistance, repeated-run metrics, and regression comparisons between model or prompt versions. Automation is appropriate here because these checks must run frequently and consistently across many responses.
 
-## 4. Detecting invented information
+I would manually evaluate whether summaries are understandable, appropriately prioritized, concise, and genuinely useful to a security analyst. Manual exploratory testing would also cover ambiguous alerts, unusual combinations of events, misleading recommendations, and new failure patterns that the existing test set does not anticipate.
 
-Each response should be split into individual factual claims. Those claims are
-then compared with the alert input and any explicitly permitted reference data.
+Human review remains important because a response can pass keyword-based checks while still being confusing, overly confident, or operationally unsafe. Reviewers would use the same rubric, and their decisions would periodically be used to recalibrate the automated evaluator.
 
-Deterministic checks can validate exact values such as:
-
-- IP addresses
-- Hostnames
-- Usernames
-- File hashes
-- Times
-- Severity
-- Alert identifiers
-
-A claim that introduces a new value must either point to its source or be marked
-as a hypothesis. Unsupported indicators, causes, or completed actions are
-failures.
-
-I would also use metamorphic tests:
-
-- Removing a field should remove claims based on that field.
-- Changing an IP, user, or time should change only the related parts.
-- Reordering equivalent events should not change the conclusion.
-- Adding irrelevant text should not change the security recommendation.
-- Adding instruction-like text inside the alert should not redirect the
-  assistant.
-
-A second model can help label or compare responses, but it cannot be the only
-judge because it can repeat the same mistake. Model-based evaluation should be
-calibrated against analyst decisions, and disagreements should go to manual
-review.
-
-## 5. Automation and manual review
-
-Automate:
-
-- Response schema and required sections
-- Exact preservation of structured alert values
-- Forbidden or unsupported values
-- Missing-field and prompt-injection cases
-- Repeated-run pass rates and contradiction checks
-- Metamorphic tests
-- Regression comparison between model or prompt versions
-- Latency, error rate, and token usage
-
-Verify manually:
-
-- Whether the summary gives an analyst the right understanding
-- Whether recommendations are useful, proportionate, and safe
-- Whether uncertainty is communicated appropriately
-- Borderline factual-support decisions
-- New failure patterns that the existing rubric does not cover
-
-Automation is appropriate for stable, repeatable rules. Security analysts are
-needed for context, usefulness, and risk judgments that cannot be reduced safely
-to string matching or one evaluator model.
-
-## 6. Release and monitoring
-
-A release report should separate hard-rule failures, quality scores, variation,
-latency, and cost. Results should also be compared with the current production
-version so an improvement in style cannot hide a loss in factual accuracy.
-
-After release, privacy-safe samples should be reviewed for unsupported claims,
-missed alert types, analyst corrections, and recommendation problems. Confirmed
-production failures should become new benchmark cases.
+Finally, I would monitor a sample of production responses, user feedback, grounding failures, and changes in response quality. Any confirmed production failure would become a new regression case. This creates a continuously improving test set as the assistant, prompts, alert formats, and user behaviour evolve.
