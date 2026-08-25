@@ -1,134 +1,132 @@
-# Test Plan: DemoQA Book Store Application
+# Test Plan: DemoQA Book Store
 
-## 1. Objective
+## 1. What we test
 
-The purpose of testing is to verify that users can find books, view correct book information, log in, and manage their book collection.
+The Book Store app must let a user:
 
-The application will be tested through the web interface as a black box. No source code or internal implementation will be used.
+- find books by title or author
+- see correct book details
+- log in with valid credentials
+- add and remove books from a personal collection
 
-No formal requirements were provided. Expected results are based on the visible behaviour of the application, consistency between pages, and normal expectations for a bookstore application. Unclear behaviour will be recorded as an observation until the expected result is confirmed.
+We test the public site at <https://demoqa.com> through the browser and its API.
+
+No requirements document was provided. Expected results come from how the site
+actually behaves. When the behavior is unclear, we record it as an observation
+instead of guessing.
 
 ## 2. Scope
 
-Testing covers the following Book Store Application pages:
-
-- Book Store
-- Book Details
-- Login
-- Profile
-
-The following user actions are included:
-
-- Loading the book catalog
-- Searching by title and author
-- Opening and checking book details
-- Registering a new user
-- Entering invalid login details
-- Logging in with a valid disposable account
-- Adding a book to the collection
-- Checking that the book remains after a page reload
-- Removing the added book
-- Checking access while logged out
-- Handling empty, unusual, or invalid search input
-- Checking navigation between the catalog, details, and profile
-- Sorting books by title
-- Handling an invalid book identifier
-
-Additional API checks cover the documented catalog, account, and collection endpoints used by these flows.
-
-## 3. Risks and priorities
-
-DemoQA is a public practice application created for testing exercises. Priorities are therefore based on functional importance, dependencies between features, state complexity, and the value of each scenario for finding defects. They do not represent commercial or production impact.
-
-### High priority
-
-| Area | What will be checked | Reason |
+| Area | What we check | How |
 |---|---|---|
-| Catalog | Books load with a title, author, and publisher | Search and book-detail tests depend on the catalog |
-| Search | Partial title and author searches work regardless of letter case | It is one of the main Book Store functions |
-| Book details | The selected book opens and its details match the catalog | This checks data consistency between two related pages |
-| Registration | A user can create an account with valid details, while invalid input is rejected | Registration is required before a new user can use authenticated features |
-| Login | Missing fields and invalid credentials do not authenticate the user | Login must reject invalid input before authenticated functions are available |
-| Collection | A logged-in user can add, retain, and remove a book | It checks login, stored data, page reload, removal, and cleanup |
+| Catalog | Books load with title, author, and publisher | Automated (UI + API) |
+| Search | Partial title and author search, case-insensitive | Automated (UI) |
+| Search edge cases | Empty, whitespace, and unknown searches | Manual (TC-08) |
+| Book details | Detail page matches the catalog record | Automated (UI + API) |
+| Login | Missing fields and wrong credentials are rejected | Automated (UI + API) |
+| Registration | Valid account creation; invalid input rejected | Manual (TC-04) |
+| Collection | Logged-in user adds, keeps, and removes a book | Automated (UI + API) |
+| Duplicate add | The same book cannot be added twice | Automated (UI) |
+| Delete cancellation | Cancelling the delete dialog keeps the book | Automated (UI) |
+| Logged-out access | Logged-out user cannot add books | Automated (UI) |
+| Navigation | Returning from details keeps catalog state | Manual (TC-09) |
+| Sorting | Sort by title in both directions | Manual (TC-10) |
+| API errors | Unknown ISBN and invalid login return proper errors | Automated (API) |
 
-### Medium priority
+Test case details: [test-cases.md](test-cases.md).
+Automated suite: `part-2-test-automation/` (8 UI tests, 5 API tests).
 
-| Area | What will be checked | Reason |
+## 3. Priorities
+
+DemoQA is a public practice site, so priorities reflect how central a feature is
+to the flows we test, not business impact.
+
+| Priority | Area | Reason |
 |---|---|---|
-| Logged-out access | A logged-out user cannot add books to a collection | It covers the logged-out state; the full collection flow is tested separately |
-| Search edge cases | Empty, whitespace, and unknown searches are handled consistently | These inputs are common but do not block the whole application |
-| Navigation state | Returning from a book detail page leaves the catalog and search field consistent | Incorrect state can confuse users but has a simple recovery |
+| High | Catalog | Search and detail tests depend on it |
+| High | Search | Main function of the store |
+| High | Book details | Checks data consistency between pages |
+| High | Login | Gate for all authenticated features |
+| High | Collection | Covers add, reload, remove, and cleanup in one flow |
+| High | Duplicate add | Collection integrity: the same book must not appear twice |
+| Medium | Delete cancellation | Protects the user from accidental data loss |
+| Medium | Logged-out access | Less critical than the full collection flow |
+| Medium | Search edge cases | Common inputs, but not blocking |
+| Medium | Navigation state | Annoying if wrong, easy to recover from |
+| Low | Sorting | Nice to have; browsing works without it |
 
-### Low priority
+## 4. How we test
 
-| Area | What will be checked | Reason |
-|---|---|---|
-| Sorting | Books can be sorted by title in both directions | Sorting is useful but users can still browse and search without it |
+We check the happy path and the failure path for each feature:
 
-## 4. Test approach
+- correct input works (catalog, search, login, collection)
+- wrong or empty input is rejected
+- data stays consistent between pages (catalog vs. details)
+- a book survives a page reload and can be removed again
+- a book already in the collection cannot be added again
+- a delete confirmation can be cancelled without losing the book
+- state transitions: logged out → logged in → book added → book removed
+- the API returns correct data and useful errors
 
-Testing will include:
+We also explore the app for behavior not covered above.
 
-- Positive scenarios for the main catalog, detail, login, and collection flows
-- Positive and negative registration scenarios
-- Negative scenarios for invalid credentials, unauthorized actions, and unknown data
-- Edge cases for empty and whitespace input
-- End-to-end checks for collection persistence and cleanup
-- API checks for catalog data, error responses, authentication, and collection state
-- Exploratory testing for behaviour not covered by written requirements
+## 5. Environment and test data
 
-The main black-box techniques are:
-
-- Equivalence partitioning for valid, invalid, matching, and non-matching inputs
-- Decision-table testing for login-field combinations
-- State-transition testing for logged-out, logged-in, book-added, and book-removed states
-- Error guessing for whitespace input and navigation state
-
-## 5. Test data and environment
-
-- Application: <https://demoqa.com>
-- Browser: Google Chrome
+- App: <https://demoqa.com> (public, shared)
+- Browser: Chrome desktop
 - Automation: Playwright with TypeScript
-- Catalog data: Books currently available on the public site
-- Registration data: A unique username and valid user details
-- Authentication: A manually supplied account or an account created through the documented API for one automated test
+- Users: unique disposable accounts created through the API, deleted in teardown
+- Books: current catalog; identified by title or ISBN, never by row position
 
-Tests must not depend on a book's row position because the catalog may change.
+Cleanup rules:
 
-The authenticated test must remove the book it adds, including when the test fails after the add step. A pre-existing account must never be deleted. An account created by automation must be deleted during teardown.
+- Tests remove every book they add, even when they fail after adding.
+- Tests never delete an account they did not create.
+- Accounts created by automation are always deleted in teardown.
 
-## 6. Not covered
+## 6. What we don't test
 
 | Area | Reason |
 |---|---|
-| Direct reCAPTCHA testing | reCAPTCHA is a third-party service; it will only be completed manually as part of registration |
-| Delete account through the UI | Destructive and not needed to verify the selected collection flow; API deletion is used only to clean up accounts created by automation |
-| Delete all books | Destructive and overlaps with the safer single-book removal test |
-| Pagination across multiple pages | The current catalog contains only one page of books |
-| Full API coverage | API checks are limited to the catalog, account, and collection operations used by the selected flows |
-| Full security testing | The public site is not an authorized security-testing environment; only visible login and access-control behaviour will be checked |
-| Performance and load testing | The public environment is shared and no performance requirements or controlled test environment are available |
-| Other browsers and mobile devices | Testing is limited to the selected Chrome desktop environment |
-| Advertisements and external links | They are controlled by third parties and are not part of the Book Store functions |
+| reCAPTCHA | Third-party service; completed manually during registration |
+| Account deletion via UI | Destructive; API deletion is used only for cleanup |
+| Delete all books | Overlaps with the safer single-book removal test |
+| Pagination | Catalog currently fits on one page |
+| Full API coverage | Only endpoints used by our flows |
+| Security testing | Public site; no authorization to test beyond visible login behavior |
+| Performance and load | Shared environment, no requirements, no controlled setup |
+| Other browsers and mobile | Scope limited to Chrome desktop |
+| Ads and external links | Third-party content, not part of the store |
 
-## 7. Execution risks
+## 7. Risks while testing
 
-The site is public and may be slow or unavailable. Tests will wait for visible page state instead of using fixed delays. Site availability problems will be reported separately from application failures.
+- The site may be slow or down. We wait for page state, not fixed delays, and
+  report availability issues separately from app bugs.
+- Ads may cover controls. We target Book Store elements directly.
+- The catalog may change between runs. We identify books by title or ISBN.
+- A leftover account from an earlier run could affect results. Unique names per
+  run prevent collisions; only test-created data is removed.
 
-Advertisements may cover controls or delay loading. Tests will target Book Store elements directly and will not validate advertisement behaviour.
+## 8. Done when
 
-Catalog content may change. Tests will identify books by title or ISBN instead of row number.
+- All high-priority checks pass or are reviewed and documented.
+- Edge cases and negative checks have been run.
+- Test-created data has been cleaned up.
+- Defects and observations are written down.
 
-Registration requires manual completion of reCAPTCHA. A unique username will be used so the result is not affected by an existing account.
+## Coverage map
 
-A pre-existing disposable account may contain data, so only data created by the test will be removed. When automation creates a unique account, the complete account will be removed during teardown.
-
-## 8. Completion
-
-Testing is complete when:
-
-- All planned high-priority scenarios have been executed.
-- Negative and edge cases have been checked.
-- Failed or blocked tests have been reviewed.
-- Test-created collection data has been removed.
-- Confirmed defects, observations, untested areas, and remaining risks have been documented.
+| Test case | Automated | Manual |
+|---|---|---|
+| TC-01 Catalog records | Yes (UI, API) | — |
+| TC-02 Search | Yes (UI) | — |
+| TC-03 Detail consistency | Yes (UI, API) | — |
+| TC-04 Registration | — | Yes |
+| TC-05 Invalid login | Yes (UI, API) | — |
+| TC-06 Collection lifecycle | Yes (UI, API) | — |
+| TC-07 Logged-out access | Yes (UI) | — |
+| TC-08 Search edge cases | — | Yes (known defect: "Page 1 of 0") |
+| TC-09 Navigation state | — | Yes |
+| TC-10 Sorting | — | Yes |
+| TC-11 Duplicate add | Yes (UI) | — |
+| TC-12 Delete cancellation | Yes (UI) | — |

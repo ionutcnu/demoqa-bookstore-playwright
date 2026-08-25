@@ -7,10 +7,11 @@ Playwright UI and API tests for the DemoQA Book Store Application.
 - [Test Plan](part-1-test-design/test-plan.md)
 - [Test Cases](part-1-test-design/test-cases.md)
 - [AI Feature Test Strategy](part-3-ai-test-strategy/test-strategy.md)
+- [Full AI Usage Report](ai-usage-report.md)
 
 ## Automated coverage
 
-The UI suite contains six tests covering:
+The UI suite contains eight tests covering:
 
 - Catalog records
 - Partial case-insensitive title and author search
@@ -18,6 +19,8 @@ The UI suite contains six tests covering:
 - Required fields and invalid login
 - Logged-out collection access
 - Authenticated add, persistence, and removal of a book
+- Duplicate-add prevention
+- Delete-confirmation cancellation
 
 Five additional API tests cover catalog data, book details, invalid ISBNs,
 invalid authentication, and the authenticated collection lifecycle.
@@ -65,8 +68,8 @@ npm run test:debug
 npm run report
 ```
 
-The full suite accesses the public DemoQA environment and creates two isolated
-disposable accounts. Both accounts are deleted during teardown.
+The full suite accesses the public DemoQA environment and creates four isolated
+disposable accounts. All accounts are deleted during teardown.
 
 ## HTML report
 
@@ -96,15 +99,14 @@ not included in the passing automated suite.
 ## Latest validation
 
 - TypeScript type-check: passed
-- Complete Playwright suite: 11 passed
+- Complete Playwright suite: 13 passed
 
 ## AI usage
 
-- I used Codex for requirement extraction, test-design review, browser exploration, Playwright drafting, and debugging.
-- Playwright MCP was used to inspect current UI behavior and selectors.
-- AI produced initial drafts of the test plan, test cases, page objects, API clients, and written strategy.
+- I used Codex and Playwright MCP to explore the app, draft tests, and debug failures.
+- AI wrote first drafts of the test plan, test cases, API clients, page objects, and the Part 3 strategy.
 - I chose the final scope, priorities, expected results, and cleanup rules.
-- I rewrote an early test plan that focused too heavily on assignment wording instead of product behavior.
-- I rejected outdated selectors and unsupported assumptions after checking the live application.
-- I corrected API field mapping and token-cleanup problems found during real test execution.
-- Every final change was reviewed, type-checked, and validated with the complete test suite.
+- I rewrote the first test plan because it described the assignment instead of the product.
+- I fixed wrong selectors, API field mapping, and account cleanup after running the real suite.
+- I rewrote the test plan and strategy to use shorter, simpler wording.
+- Every change was reviewed, type-checked, and validated with the complete test suite.
