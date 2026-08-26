@@ -7,16 +7,17 @@ Playwright UI and API tests for the DemoQA Book Store Application.
 - [Test Plan](part-1-test-design/test-plan.md)
 - [Test Cases](part-1-test-design/test-cases.md)
 - [AI Feature Test Strategy](part-3-ai-test-strategy/test-strategy.md)
-- [Full AI Usage Report](ai-usage-report.md)
 
 ## Automated coverage
 
-The UI suite contains eight tests covering:
+The UI suite contains ten tests covering:
 
 - Catalog records
 - Partial case-insensitive title and author search
 - Book-detail consistency
 - Required fields and invalid login
+- Required registration fields and weak-password validation
+- Valid registration followed by login
 - Logged-out collection access
 - Authenticated add, persistence, and removal of a book
 - Duplicate-add prevention
@@ -33,6 +34,7 @@ collection data are removed during teardown.
 - `part-1-test-design` — test plan and manual test cases
 - `part-2-test-automation/src` — API clients, fixtures, models, and page objects
 - `part-2-test-automation/tests` — Playwright API and UI tests
+- `part-2-test-automation/docs` — reCAPTCHA automation notes
 - `part-2-test-automation/playwright.config.ts` — test projects and reporting
 - `part-3-ai-test-strategy` — strategy for testing the AI-powered feature
 
@@ -55,37 +57,25 @@ prevents the `.ps1` commands from running.
 ## Running tests
 
 ```bash
-npm test
-npm run test:ui
-npm run test:api
-npm run typecheck
-npm run format
-npm run format:check
-npm run quality
-npm run quality:fix
-npm run test:headed
-npm run test:debug
-npm run report
+npm test               # full suite
+npm run test:ui        # UI only
+npm run test:api       # API only
+npm run test:headed    # watch in a browser
+npm run report         # open the HTML report
 ```
 
-The full suite accesses the public DemoQA environment and creates four isolated
+Run one spec: `npm run test:ui -- tests/ui/collection.ui.spec.ts` (same pattern
+with `test:api`). Quality checks: `npm run typecheck` and `npm run quality`.
+
+The full suite accesses the public DemoQA environment and creates five isolated
 disposable accounts. All accounts are deleted during teardown.
 
 ## HTML report
 
-Playwright creates an HTML report after each complete test run. Open it locally
-with `npm run report`. GitHub Actions displays totals and a per-test results table
-directly in the job summary. A downloadable HTML report is retained for 14 days
-when more detail is needed. Failed tests include their traces, screenshots, and
-videos in that report.
-
-## HTML report
-
-Playwright creates an HTML report after each complete test run. Open it locally
-with `npm run report`. GitHub Actions displays totals and a per-test results table
-directly in the job summary. A downloadable HTML report is retained for 14 days
-when more detail is needed. Failed tests include their traces, screenshots, and
-videos in that report.
+Playwright writes an HTML report after each run — open it with `npm run report`.
+In CI, totals and failures show up in the job summary; the full report is kept
+as a downloadable artifact for 14 days, with traces, screenshots, and videos
+for failed tests.
 
 ## Test design notes
 
@@ -95,8 +85,9 @@ videos in that report.
   fixed delays.
 - UI login is tested through the browser; API calls are used only for disposable
   setup, cleanup, and API-level checks.
-- Traces, screenshots, and videos are retained when a test fails.
-- Biome formats and checks the TypeScript and JSON files locally and in CI.
+- The registration test replaces the reCAPTCHA script with a stubbed token; the
+  real Google service is not exercised. See
+  [the full explanation](part-2-test-automation/docs/recaptcha-stub.md).
 
 ## Known observation
 
@@ -107,14 +98,16 @@ not included in the passing automated suite.
 ## Latest validation
 
 - TypeScript type-check: passed
-- Complete Playwright suite: 13 passed
+- Complete Playwright suite: 15 passed
 
 ## AI usage
 
-- I used Codex and Playwright MCP to explore the app, draft tests, and debug failures.
-- AI wrote first drafts of the test plan, test cases, API clients, page objects, and the Part 3 strategy.
-- I chose the final scope, priorities, expected results, and cleanup rules.
-- I rewrote the first test plan because it described the assignment instead of the product.
-- I fixed wrong selectors, API field mapping, and account cleanup after running the real suite.
-- I rewrote the test plan and strategy to use shorter, simpler wording.
-- Every change was reviewed, type-checked, and validated with the complete test suite.
+- i used ai for all 3 parts: codex + playwright mcp for the automation, chatgpt for the part 3 strategy and decision tree, deepseek for the rechapcha work.
+- the ai generated first drafts of the test plan, test cases, the strategy, and most of the test code.
+- i did the exploratory testing and the analysis first, then let the ai expand it.
+- i kept pushing back on the ai drafts — the plan talked about the asigment insted of the product, was full of buzzwords like "failure impact: critical" and had wrong priorities.
+- i made it redo it in plain words, after discovery of the actual app, and split clearly what we test from what we automate.
+- i rejected the first part 3 output too: it was vague and basically ai slop, so i analyzed the requirements myself and built the strategy and the decision tree from my own analysis.
+- when ai said the rechapcha cannot be automated i trusted my own exploratory testing over it and pushed further with deepseek until we had a ui e2e test (details in [recaptcha-stub.md](part-2-test-automation/docs/recaptcha-stub.md)).
+- every final change was reviewed by me, type-checked, and validated with the full suite (15 passing).
+- the full story in my own words: [thoughts.md](thoughts.md)

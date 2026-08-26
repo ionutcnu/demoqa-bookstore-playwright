@@ -46,15 +46,24 @@ Priority is based on functional importance, test dependencies, state complexity,
 - Preconditions: The chosen username does not already exist.
 
 **Given** a user opens the registration page \
-**When** the user submits missing or invalid registration data \
-**Then** the invalid fields are identified \
+**When** the user submits the form with empty fields \
+**Then** all required fields are identified \
+**And** no account is created.
+
+**Given** the user enters valid names and a unique username \
+**But** enters a password that does not meet the password rules \
+**When** the user submits the registration form \
+**Then** the password is rejected with a clear explanation \
 **And** no account is created.
 
 **Given** the user enters valid unique account details \
-**And** completes reCAPTCHA manually \
 **When** the user submits the registration form \
 **Then** the account is created \
 **And** the user can return to Login and authenticate with the new credentials.
+
+### Cleanup
+
+The account created by this test is deleted through the API after the login check.
 
 ## TC-05: Reject missing fields and invalid login credentials
 

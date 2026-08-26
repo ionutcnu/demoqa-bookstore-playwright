@@ -3,7 +3,9 @@ import { type APIResponse, test as base, expect } from '@playwright/test';
 import { AccountApi } from '../api/account-api';
 import { BookStoreApi } from '../api/bookstore-api';
 import type {
+  Credentials,
   DisposableUser,
+  RegistrationUser,
   TokenResponse,
   UserResponse,
 } from '../models/user';
@@ -11,6 +13,7 @@ import { BookDetailsPage } from '../pages/book-details-page';
 import { BookStorePage } from '../pages/book-store-page';
 import { LoginPage } from '../pages/login-page';
 import { ProfilePage } from '../pages/profile-page';
+import { RegistrationPage } from '../pages/registration-page';
 
 interface TestFixtures {
   accountApi: AccountApi;
@@ -20,6 +23,8 @@ interface TestFixtures {
   bookStorePage: BookStorePage;
   loginPage: LoginPage;
   profilePage: ProfilePage;
+  registrationPage: RegistrationPage;
+  registrationUser: RegistrationUser;
 }
 
 export const test = base.extend<TestFixtures>({
@@ -47,8 +52,34 @@ export const test = base.extend<TestFixtures>({
     await use(new ProfilePage(page));
   },
 
+  registrationPage: async ({ page }, use) => {
+    await use(new RegistrationPage(page));
+  },
+
+  registrationUser: async ({ accountApi }, use) => {
+    const suffix = uniqueSuffix();
+    const registrationUser: RegistrationUser = {
+      firstName: 'QA',
+      lastName: 'Automation',
+      credentials: {
+        userName: `qa_reg_${suffix}`,
+        password: `Qa1!${suffix}x`,
+      },
+    };
+
+    await use(registrationUser);
+
+    if (registrationUser.userId) {
+      await deleteCreatedUser(
+        accountApi,
+        registrationUser.userId,
+        registrationUser.credentials,
+      );
+    }
+  },
+
   disposableUser: async ({ accountApi }, use) => {
-    const suffix = randomUUID().replaceAll('-', '').slice(0, 12);
+    const suffix = uniqueSuffix();
     const credentials = {
       userName: `qa_${suffix}`,
       password: `Qa1!${suffix}x`,
@@ -60,43 +91,54 @@ export const test = base.extend<TestFixtures>({
     }
 
     const createdUser = (await createResponse.json()) as UserResponse;
-    const token = await generatedToken(
-      'Generate disposable-user token',
-      await accountApi.generateToken(credentials),
-    );
-
     const disposableUser: DisposableUser = {
       credentials,
       userId: createdUser.userID,
-      token,
+      token: '',
     };
 
-    await use(disposableUser);
-
-    const cleanupToken = await generatedToken(
-      'Generate cleanup token',
-      await accountApi.generateToken(disposableUser.credentials),
-    );
-    const deleteResponse = await accountApi.deleteUser(
-      disposableUser.userId,
-      cleanupToken,
-    );
-
-    if (!deleteResponse.ok()) {
-      throw await responseError('Delete disposable user', deleteResponse);
-    }
-
-    const verificationResponse = await accountApi.getUser(
-      disposableUser.userId,
-      cleanupToken,
-    );
-    if (verificationResponse.status() === 200) {
-      throw new Error('Delete disposable user failed: user still exists');
+    try {
+      disposableUser.token = await generatedToken(
+        'Generate disposable-user token',
+        await accountApi.generateToken(credentials),
+      );
+      await use(disposableUser);
+    } finally {
+      await deleteCreatedUser(
+        accountApi,
+        disposableUser.userId,
+        disposableUser.credentials,
+      );
     }
   },
 });
 
 export { expect };
+
+function uniqueSuffix(): string {
+  return randomUUID().replaceAll('-', '').slice(0, 12);
+}
+
+async function deleteCreatedUser(
+  accountApi: AccountApi,
+  userId: string,
+  credentials: Credentials,
+): Promise<void> {
+  const cleanupToken = await generatedToken(
+    'Generate cleanup token',
+    await accountApi.generateToken(credentials),
+  );
+  const deleteResponse = await accountApi.deleteUser(userId, cleanupToken);
+
+  if (!deleteResponse.ok()) {
+    throw await responseError('Delete disposable user', deleteResponse);
+  }
+
+  const verificationResponse = await accountApi.getUser(userId, cleanupToken);
+  if (verificationResponse.status() === 200) {
+    throw new Error('Delete disposable user failed: user still exists');
+  }
+}
 
 async function generatedToken(
   operation: string,

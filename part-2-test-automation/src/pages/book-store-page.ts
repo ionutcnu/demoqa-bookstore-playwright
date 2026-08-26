@@ -25,15 +25,9 @@ export class BookStorePage {
   }
 
   async open(): Promise<void> {
-    const catalogResponse = this.page.waitForResponse(
-      (response) =>
-        response.request().method() === 'GET' &&
-        new URL(response.url()).pathname === '/BookStore/v1/Books',
-    );
-
     await this.page.goto('/books', { waitUntil: 'domcontentloaded' });
-    await catalogResponse;
     await this.table.waitFor({ state: 'visible' });
+    await this.dataRows.first().waitFor({ state: 'visible' });
   }
 
   async search(term: string): Promise<void> {

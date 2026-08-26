@@ -6,6 +6,7 @@ The Book Store app must let a user:
 
 - find books by title or author
 - see correct book details
+- create an account and log in
 - log in with valid credentials
 - add and remove books from a personal collection
 
@@ -24,7 +25,7 @@ instead of guessing.
 | Search edge cases | Empty, whitespace, and unknown searches | Manual (TC-08) |
 | Book details | Detail page matches the catalog record | Automated (UI + API) |
 | Login | Missing fields and wrong credentials are rejected | Automated (UI + API) |
-| Registration | Valid account creation; invalid input rejected | Manual (TC-04) |
+| Registration | Valid account creation and login; empty fields and weak passwords rejected | Automated (UI) |
 | Collection | Logged-in user adds, keeps, and removes a book | Automated (UI + API) |
 | Duplicate add | The same book cannot be added twice | Automated (UI) |
 | Delete cancellation | Cancelling the delete dialog keeps the book | Automated (UI) |
@@ -34,7 +35,7 @@ instead of guessing.
 | API errors | Unknown ISBN and invalid login return proper errors | Automated (API) |
 
 Test case details: [test-cases.md](test-cases.md).
-Automated suite: `part-2-test-automation/` (8 UI tests, 5 API tests).
+Automated suite: `part-2-test-automation/` (10 UI tests, 5 API tests).
 
 ## 3. Priorities
 
@@ -46,6 +47,7 @@ to the flows we test, not business impact.
 | High | Catalog | Search and detail tests depend on it |
 | High | Search | Main function of the store |
 | High | Book details | Checks data consistency between pages |
+| High | Registration | A new user must create an account before logging in |
 | High | Login | Gate for all authenticated features |
 | High | Collection | Covers add, reload, remove, and cleanup in one flow |
 | High | Duplicate add | Collection integrity: the same book must not appear twice |
@@ -61,6 +63,7 @@ We check the happy path and the failure path for each feature:
 
 - correct input works (catalog, search, login, collection)
 - wrong or empty input is rejected
+- registration rejects missing fields and weak passwords
 - data stays consistent between pages (catalog vs. details)
 - a book survives a page reload and can be removed again
 - a book already in the collection cannot be added again
@@ -75,7 +78,7 @@ We also explore the app for behavior not covered above.
 - App: <https://demoqa.com> (public, shared)
 - Browser: Chrome desktop
 - Automation: Playwright with TypeScript
-- Users: unique disposable accounts created through the API, deleted in teardown
+- Users: unique disposable accounts created through the UI or API, deleted in teardown
 - Books: current catalog; identified by title or ISBN, never by row position
 
 Cleanup rules:
@@ -88,7 +91,7 @@ Cleanup rules:
 
 | Area | Reason |
 |---|---|
-| reCAPTCHA | Third-party service; completed manually during registration |
+| reCAPTCHA | Third-party bot protection; stubbed with a fake token in automation — we test the registration form, not Google's widget |
 | Account deletion via UI | Destructive; API deletion is used only for cleanup |
 | Delete all books | Overlaps with the safer single-book removal test |
 | Pagination | Catalog currently fits on one page |
@@ -121,7 +124,7 @@ Cleanup rules:
 | TC-01 Catalog records | Yes (UI, API) | — |
 | TC-02 Search | Yes (UI) | — |
 | TC-03 Detail consistency | Yes (UI, API) | — |
-| TC-04 Registration | — | Yes |
+| TC-04 Registration | Yes (UI) | — |
 | TC-05 Invalid login | Yes (UI, API) | — |
 | TC-06 Collection lifecycle | Yes (UI, API) | — |
 | TC-07 Logged-out access | Yes (UI) | — |

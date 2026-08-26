@@ -41,3 +41,11 @@ I would manually evaluate whether summaries are understandable, appropriately pr
 Human review remains important because a response can pass keyword-based checks while still being confusing, overly confident, or operationally unsafe. Reviewers would use the same rubric, and their decisions would periodically be used to recalibrate the automated evaluator.
 
 Finally, I would monitor a sample of production responses, user feedback, grounding failures, and changes in response quality. Any confirmed production failure would become a new regression case. This creates a continuously improving test set as the assistant, prompts, alert formats, and user behaviour evolve.
+
+## Interactive companion (optional)
+
+[decision-tree.html](decision-tree.html) is a visual version of this thinking,
+organized as a decision tree: the clarifying questions to ask first, the
+assumptions behind each answer, the expectation that follows, and example
+test scenarios. Open it in a browser to explore. It is a nice-to-have
+companion, not a requirement.

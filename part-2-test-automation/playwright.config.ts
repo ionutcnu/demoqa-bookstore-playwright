@@ -43,6 +43,7 @@ export default defineConfig({
       testMatch: /.*\.ui\.spec\.ts/,
       use: {
         ...devices['Desktop Chrome'],
+        channel: process.env.PLAYWRIGHT_CHANNEL,
       },
     },
   ],
