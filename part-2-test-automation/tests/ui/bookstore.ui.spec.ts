@@ -100,7 +100,7 @@ function longestWord(value: string): string {
 }
 
 function partialWord(word: string): string {
-  return word.slice(1, -1);
+  return word.length > 2 ? word.slice(1, -1) : word;
 }
 
 function mixedCase(value: string): string {
