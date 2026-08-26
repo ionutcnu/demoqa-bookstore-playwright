@@ -9,5 +9,3 @@ coverage/
 .env
 .env.*
 !.env.example
-
-QA_TakeHome_Assignment_Bitdefender*.docx
