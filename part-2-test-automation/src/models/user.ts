@@ -23,3 +23,10 @@ export interface DisposableUser {
   userId: string;
   token: string;
 }
+
+export interface RegistrationUser {
+  firstName: string;
+  lastName: string;
+  credentials: Credentials;
+  userId?: string;
+}
