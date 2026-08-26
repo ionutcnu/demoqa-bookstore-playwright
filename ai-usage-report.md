@@ -7,7 +7,7 @@ corrected, rejected, or rewritten — and why.
 
 - **Codex** (OpenAI CLI, 3 local sessions in `A:\Projects\Bitdefender`)
 - **Playwright MCP** — live browser exploration of the DemoQA site
-- **opencode** (Claude) — final document rewrites and coverage review
+- **opencode** (DeepSeek) — final document rewrites and coverage review
 - **GitHub Actions** — CI feedback loop on every push
 
 ## Timeline and thought process
@@ -74,8 +74,20 @@ Final pass with opencode (Claude):
   TC-12, automated both (suite now 13 passing)
 - Replaced the Part 3 strategy with a tighter version that fits the 2-page
   limit and kept the perturbation-test idea from the old draft
+- Automated the registration UI end to end by stubbing the reCAPTCHA script
+  with Playwright route interception; fixed the weak-password assertion to
+  match real app behavior (the app shows a server message, not a field flag)
 - Fixed stale README facts (account count) and compressed the AI-usage
   section to fit the 10-line limit
+- Moved and linked the interactive decision tree into the Part 3 folder
+
+### Codex follow-up — decision tree
+
+For the Part 3 companion artifact, I wrote my own in-depth analysis of the
+scenario and the clarifying questions that matter. Codex expanded each topic
+into the full interactive decision-tree HTML (questions, assumptions,
+expectations, strategies, example oracles). The structure and the thinking
+are mine; the expansion and the visualization are Codex's.
 
 ## What AI generated
 
@@ -85,6 +97,7 @@ Final pass with opencode (Claude):
 - GitHub Actions workflow
 - Initial repo structure and Biome setup
 - Debugging of real run failures (API field mapping, token cleanup)
+- The interactive decision-tree HTML, expanded from my analysis
 
 ## What I corrected, rejected, or rewrote — and why
 
@@ -93,11 +106,12 @@ Final pass with opencode (Claude):
 | Rewrote the first test plan | It described the assignment wording instead of product behavior |
 | Rewrote it again | AI buzzwords, wrong priorities, "Failure impact: Critical" filler |
 | Set scope, priorities, and cleanup rules myself | These are judgment calls, not drafting work |
-| Kept reCAPTCHA out of automation | Third-party anti-bot flow; testing it manually is the honest choice |
+| Stubbed reCAPTCHA for UI registration testing | Google's service can't be exercised by E2E; the form logic can |
 | Rejected outdated selectors and assumptions | They failed against the live site; MCP inspection replaced guesses |
 | Fixed API field mapping and token cleanup | Found only by running the real suite |
 | Rewrote plan and strategy for plain words | Shorter, simpler text reads better and shows the thinking |
 | Added duplicate-add and cancel-delete coverage | Coverage-map review exposed real gaps |
+| Wrote the decision-tree analysis myself | Codex expanded it, but the structure and reasoning are mine |
 
 ## Mistakes made and learned from
 
@@ -118,4 +132,4 @@ Final pass with opencode (Claude):
 - Decide what ships
 
 Every final change was reviewed by me, type-checked, and validated with the
-complete test suite (13 passing).
+complete test suite (15 passing).
